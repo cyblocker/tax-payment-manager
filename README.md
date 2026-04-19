@@ -79,13 +79,15 @@ To keep your secrets safe and your architecture strictly isolated, this reposito
    cd bot
    npx wrangler deploy
    ```
-3. Set your `TELEGRAM_BOT_TOKEN` explicitly as a Secret for this new router:
+3. Set your `TELEGRAM_BOT_TOKEN` and `TELEGRAM_ALLOWED_USER_ID` explicitly as a Secret for this new router:
    **For Production:**
    ```bash
    npx wrangler secret put TELEGRAM_BOT_TOKEN
+   npx wrangler secret put TELEGRAM_ALLOWED_USER_ID
    ```
    **For Local Development:** Create `bot/.dev.vars`:
    ```env
    TELEGRAM_BOT_TOKEN="your-telegram-token"
+   TELEGRAM_ALLOWED_USER_ID="your-telegram-user-id"
    ```
 4. Register your webhook via Telegram API pointing to the bot router's domain: `https://api.telegram.org/bot<YOUR_TOKEN>/setWebhook?url=https://<YOUR_BOT_WORKER_DOMAIN>/webhook`

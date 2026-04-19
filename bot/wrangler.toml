@@ -2,9 +2,6 @@ name = "telegram-bot-router"
 compatibility_date = "2024-04-19"
 main = "src/index.ts"
 
-[vars]
-TELEGRAM_ALLOWED_USER_ID = "264771739"
-
 [[services]]
 binding = "BACKEND"
 service = "tax-payment-backend"
