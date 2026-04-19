@@ -212,9 +212,9 @@ function App() {
                   <div
                     key={i}
                     onClick={() => openEditor(bill)}
-                    className="flex bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all cursor-pointer group hover:border-indigo-200"
+                    className="flex flex-col sm:flex-row bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all cursor-pointer group hover:border-indigo-200"
                   >
-                    <div className="w-32 bg-gray-50 relative overflow-hidden flex-shrink-0 border-r border-gray-100">
+                    <div className="w-full h-40 sm:w-32 sm:h-auto bg-gray-50 relative overflow-hidden flex-shrink-0 border-b sm:border-b-0 sm:border-r border-gray-100">
                       {bill.originalImage ? (
                         <img src={`${API_BASE}${bill.originalImage}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Bill" />
                       ) : (
@@ -223,8 +223,8 @@ function App() {
                         </div>
                       )}
                     </div>
-                    <div className="p-5 flex-1 pl-6">
-                      <div className="flex justify-between items-start">
+                    <div className="p-5 flex-1 sm:pl-6">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-2">
                         <div>
                           <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider mb-2 ${bill.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' : bill.status === 'SCHEDULED' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
                             {bill.status || 'PENDING'}
@@ -236,13 +236,16 @@ function App() {
                             {bill.taxYear || ''} {bill.payIndex || ''}
                           </p>
                         </div>
-                        <div className="text-right">
-                          <span className="text-2xl font-black text-indigo-600">¥{(bill.amount || 0).toLocaleString()}</span>
+                        <div className="sm:text-right">
+                          <span className="text-2xl font-black text-indigo-600 block">¥{(bill.amount || 0).toLocaleString()}</span>
                         </div>
                       </div>
 
-                      <div className="mt-4 flex gap-4 text-sm font-medium text-gray-600">
+                      <div className="mt-4 pt-4 border-t border-gray-50 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-gray-600">
                         <div className="flex items-center gap-1.5"><CalendarDays className="w-4 h-4 text-gray-400" /> Due: {bill.dueDate || 'N/A'}</div>
+                        {bill.scheduledDate && (
+                          <div className="flex items-center gap-1.5"><CalendarDays className="w-4 h-4 text-indigo-400" /> Pay on: {bill.scheduledDate}</div>
+                        )}
                       </div>
                     </div>
                   </div>
