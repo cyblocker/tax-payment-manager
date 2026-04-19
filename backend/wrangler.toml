@@ -10,7 +10,7 @@ TELEGRAM_BOT_TOKEN = ""
 [[d1_databases]]
 binding = "DB"
 database_name = "tax-payment-manager-db"
-database_id = "YOUR-D1-DATABASE-ID"
+database_id = "9c248574-762f-45b1-898c-f5b2328d7fab"
 migrations_dir = "drizzle"
 
 [[r2_buckets]]

@@ -5,7 +5,7 @@ A blazing-fast, serverless application for automating the tracking and data-extr
 ## Architecture Highlights
 - **Premium Frontend:** Modern React + Vite SPA using TailwindCSS and client-side PDF splitting.
 - **Serverless Backend:** TypeScript API built on Hono, capable of near-instant boot times globally on Cloudflare Workers.
-- **AI Engine:** Integrated `gemini-2.5-flash` natively streams extracted receipts and JSON schema structures into Cloudflare D1.
+- **AI Engine:** Integrated `gemini-3.1-flash-lite-preview` natively streams extracted receipts and JSON schema structures into Cloudflare D1.
 - **Telegram Native:** Plugs perfectly into the Telegram Ecosystem via a `/internal/bot-handler` webhook endpoint for conversational scheduling and uploads.
 
 ## How to Deploy to Cloudflare
@@ -24,13 +24,13 @@ npx wrangler r2 bucket create tax-manager-storage
 *Note down the `database_id` given by the D1 creation command and place it into `backend/wrangler.toml`.*
 
 ### 2. GitHub Integration (Frontend & Backend)
-1. Commit and push this repository to GitHub.
+1. Fork this repository to GitHub.
 2. In the **Cloudflare Dashboard**, navigate to **Workers & Pages**.
 3. **For the Frontend:** Click `Create Application` -> `Pages` -> `Connect to Git`. Select your repository, configure the build directory to `/frontend/`, the build command to `npm run build`, and the output directory to `dist`. Deploy.
 4. **For the Backend API:** Navigate to `Create Application` -> `Workers` -> Connect to GitHub. Select `/backend/` as the root. Cloudflare will automatically read your `wrangler.toml`.
-5. Apply the database schemas from your computer using:
+5. Apply the database schemas from your computer using (Please note, build will fail if the db is not initialized.):
    ```bash
-   npm run db:migrate --remote
+   npm run db:migrate:remote
    ``` 
 
 ### 3. Environment Secrets configuration
