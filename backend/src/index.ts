@@ -20,12 +20,6 @@ app.use('/*', cors());
 app.get('/api/taxbills', async (c) => {
   const db = drizzle(c.env.DB);
 
-  // Lazy Update: Shift past Scheduled items to Paid
-  const today = new Date().toISOString().split('T')[0];
-  await db.update(taxBills)
-    .set({ status: 'PAID' })
-    .where(and(eq(taxBills.status, 'SCHEDULED'), lt(taxBills.scheduledDate, today)));
-
   const bills = await db.select().from(taxBills).orderBy(desc(taxBills.createdAt)).all();
   return c.json(bills);
 });
@@ -178,12 +172,6 @@ app.post('/internal/bot-handler', async (c) => {
 
   const bot = new TelegramBot(c.env.BOT, c.env.DB, c.env.BUCKET, c.env.GEMINI_API_KEY);
 
-  // Lazy Update: Shift past Scheduled items to Paid via Bot Trigger
-  const today = new Date().toISOString().split('T')[0];
-  await drizzle(c.env.DB).update(taxBills)
-    .set({ status: 'PAID' })
-    .where(and(eq(taxBills.status, 'SCHEDULED'), lt(taxBills.scheduledDate, today)));
-
   c.executionCtx.waitUntil(
     bot.handleUpdate(body).catch(err => {
       console.error("CRITICAL: Bot Handle Error:", err);
@@ -193,4 +181,48 @@ app.post('/internal/bot-handler', async (c) => {
   return c.json({ status: 'ok', msg: 'Bot request acknowledged in Main Worker' });
 });
 
-export default app;
+export default {
+  fetch: app.fetch,
+  async scheduled(event: any, env: Env, ctx: ExecutionContext) {
+    const db = drizzle(env.DB);
+    const today = new Date();
+    
+    const bills = await db.select().from(taxBills).all();
+    
+    for (const b of bills) {
+      if (b.status === 'PENDING' && b.dueDate) {
+        const due = new Date(b.dueDate);
+        const diffDays = Math.round((due.getTime() - today.getTime()) / (1000 * 3600 * 24));
+        
+        if (diffDays === 7 || diffDays === 3 || diffDays === 1) {
+          const msg = `⚠️ *Action Required: Upcoming Tax Deadline*\n\nTax: ${b.taxType || 'Unknown'}\nAmount: ¥${b.amount}\nDue in: ${diffDays} day(s)`;
+          await env.BOT.fetch(new Request("http://bot/api/notify-admin", {
+            method: 'POST',
+            body: JSON.stringify({ text: msg }),
+          }));
+        }
+      }
+      
+      if (b.status === 'SCHEDULED' && b.scheduledDate) {
+        const sched = new Date(b.scheduledDate);
+        const diffDays = Math.round((sched.getTime() - today.getTime()) / (1000 * 3600 * 24));
+        
+        if (diffDays === 1) {
+          const msg = `🔔 *Reminder: Scheduled Payment Tomorrow*\n\nTax: ${b.taxType || 'Unknown'}\nAmount: ¥${b.amount}`;
+          await env.BOT.fetch(new Request("http://bot/api/notify-admin", {
+            method: 'POST',
+            body: JSON.stringify({ text: msg }),
+          }));
+        } else if (diffDays < 0) {
+          // Past the scheduled date
+          await db.update(taxBills).set({ status: 'PAID' }).where(eq(taxBills.id, b.id));
+          const msg = `✅ *Payment Marked as Paid*\n\nTax: ${b.taxType || 'Unknown'}\nThe scheduled date has passed and the bill was automatically moved to Paid status.`;
+          await env.BOT.fetch(new Request("http://bot/api/notify-admin", {
+            method: 'POST',
+            body: JSON.stringify({ text: msg }),
+          }));
+        }
+      }
+    }
+  }
+};

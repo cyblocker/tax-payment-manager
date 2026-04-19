@@ -76,4 +76,24 @@ app.get('/file/:path{.*}', async (c) => {
   return fetch(new Request(tgUrl, c.req.raw));
 });
 
+// Internal endpoint to notify the admin reliably
+app.post('/api/notify-admin', async (c) => {
+  try {
+    const { text } = await c.req.json();
+    const tgUrl = `https://api.telegram.org/bot${c.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+    
+    return fetch(new Request(tgUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: c.env.TELEGRAM_ALLOWED_USER_ID,
+        text: text,
+        parse_mode: 'Markdown'
+      })
+    }));
+  } catch (error) {
+    return new Response('Error rendering notification', { status: 500 });
+  }
+});
+
 export default app;
