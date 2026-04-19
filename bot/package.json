@@ -13,5 +13,18 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240405.0",
     "wrangler": "^4.83.0"
+  },
+  "cloudflare": {
+    "bindings": {
+      "TELEGRAM_BOT_TOKEN": {
+        "description": "Your Telegram Bot Token (from @BotFather)."
+      },
+      "TELEGRAM_ALLOWED_USER_ID": {
+        "description": "The numeric Chat ID of the authorized admin user (from @userinfobot)."
+      },
+      "BACKEND": {
+        "description": "Service binding to the tax-payment-backend."
+      }
+    }
   }
 }

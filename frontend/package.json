@@ -25,5 +25,12 @@
     "tailwindcss": "^3.4.3",
     "typescript": "^5.4.0",
     "vite": "^8.0.8"
+  },
+  "cloudflare": {
+    "bindings": {
+      "BACKEND": {
+        "description": "Service binding to the tax-payment-backend API."
+      }
+    }
   }
 }

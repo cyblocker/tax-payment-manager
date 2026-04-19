@@ -10,6 +10,13 @@ A blazing-fast, serverless application for automating the tracking and data-extr
 
 ## How to Deploy to Cloudflare
 
+[![Deploy Backend](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/YOUR_GITHUB_USERNAME/tax-payment-manager/tree/main/backend)
+[![Deploy Bot](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/YOUR_GITHUB_USERNAME/tax-payment-manager/tree/main/bot)
+[![Deploy Frontend](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/YOUR_GITHUB_USERNAME/tax-payment-manager/tree/main/frontend)
+
+> [!NOTE]
+> Replace `YOUR_GITHUB_USERNAME` in the button links with your actual GitHub username after forking.
+
 Because this is a serverless application utilizing Cloudflare's specific database/storage abstractions, initial setup requires utilizing the `wrangler` CLI to build your resources.
 
 ### 1. Initialize Resources locally

@@ -19,5 +19,18 @@
     "@cloudflare/workers-types": "^4.20240405.0",
     "drizzle-kit": "^0.31.10",
     "wrangler": "^4.83.0"
+  },
+  "cloudflare": {
+    "bindings": {
+      "GEMINI_API_KEY": {
+        "description": "Your Google Gemini AI API Key (from Google AI Studio)."
+      },
+      "DB": {
+        "description": "D1 Database for storing tax bill records."
+      },
+      "BUCKET": {
+        "description": "R2 Bucket for storing pdfs and images."
+      }
+    }
   }
 }
