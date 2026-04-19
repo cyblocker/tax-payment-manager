@@ -26,7 +26,7 @@ npx wrangler r2 bucket create tax-manager-storage
 ### 2. GitHub Integration (Frontend & Backend)
 1. Fork this repository to GitHub.
 2. In the **Cloudflare Dashboard**, navigate to **Workers & Pages**.
-3. **For the Frontend:** Click `Create Application` -> `Pages` -> `Connect to Git`. Select your repository, configure the build directory to `/frontend/`, the build command to `npm run build`, and the output directory to `dist`. Deploy.
+3. **For the Frontend:** Click `Create Application` -> `Pages` -> `Connect to Git`. Select your repository, configure the build directory to `/frontend/`, the build command to `npm run build`. Deploy.
 4. **For the Backend API:** Navigate to `Create Application` -> `Workers` -> Connect to GitHub. Select `/backend/` as the root. Cloudflare will automatically read your `wrangler.toml`.
 5. Apply the database schemas from your computer using (Please note, build will fail if the db is not initialized.):
    ```bash
