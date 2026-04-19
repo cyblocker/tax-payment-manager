@@ -13,7 +13,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<'PENDING' | 'ARCHIVED'>('PENDING');
   const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
 
-  const API_BASE = 'http://localhost:8787'; // Point to the local wrangler Dev server
+  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
 
   const fetchBills = async () => {
     setIsLoadingBills(true);
