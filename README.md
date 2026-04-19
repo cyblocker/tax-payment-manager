@@ -36,8 +36,8 @@ npx wrangler r2 bucket create tax-manager-storage
 ### 3. Environment Secrets configuration
 You must supply the backend with its required secrets via the Cloudflare Dashboard (Workers -> Your Backend API -> Settings -> Environment Variables):
 - `GEMINI_API_KEY`: Your Google GenAI Token.
-- `TELEGRAM_BOT_TOKEN`: Your API token generated from @BotFather.
-- `TELEGRAM_ALLOWED_USER_ID`: The numeric Chat ID of the authorized admin user.
+
+*(Note: Telegram Secrets are strictly handled by the independent Bot Router Service, NOT the master backend!)*
 
 ### 4. Environment Variables configuration
 You must supply the frontend with its required secrets via the Cloudflare Dashboard (Workers & Pages -> Your Frontend -> Settings -> Environment Variables):
@@ -57,4 +57,71 @@ You can point Telegram's setWebhook directly to the backend:
 *(Not recommended, as anyone can spoof Telegram requests if they discover your worker URL, although the codebase natively drops any chat IDs that do not match `TELEGRAM_ALLOWED_USER_ID` as a final precaution).*
 
 **Option B: Build a Private Router Cloudflare Worker (Recommended)**
-Build a tiny 20-line Cloudflare worker that natively intercepts requests from Telegram, verifies the payload comes from Telegram natively, and `POST`s the `req.json()` securely underneath the hood to your Tax Backend. This allows you to expand your Bot Router to handle entirely different services simultaneously!
+To keep your secrets safe and your architecture strictly isolated, create a separate independent Cloudflare worker locally that natively intercepts requests from Telegram, verifies your `TELEGRAM_ALLOWED_USER_ID`, and securely invokes your backend over Service Bindings! It also acts as an outbound gateway to keep `TELEGRAM_BOT_TOKEN` completely decoupled from your core Tax backend API.
+
+#### Create the Router from Scratch:
+1. Open a terminal anywhere outside of the main project and run: `npm create cloudflare@latest telegram-bot-router -- --framework=hono --lang=ts`
+2. Update the generated `wrangler.toml` to bind the backend:
+   ```toml
+   name = "telegram-bot-router"
+   compatibility_date = "2024-04-19"
+   
+   [vars]
+   TELEGRAM_ALLOWED_USER_ID = "YOUR_ADMIN_CHAT_ID"
+   
+   [[services]]
+   binding = "BACKEND"
+   service = "tax-payment-backend"
+   ```
+3. Replace the contents of `src/index.ts` with this complete proxy logic:
+   ```typescript
+   import { Hono } from 'hono';
+
+   export type Env = {
+     TELEGRAM_ALLOWED_USER_ID: string;
+     TELEGRAM_BOT_TOKEN: string;
+     BACKEND: Fetcher;
+   };
+
+   const app = new Hono<{ Bindings: Env }>();
+
+   app.post('/webhook', async (c) => {
+     try {
+       const payload = await c.req.json();
+       const userId = payload.message?.from?.id?.toString() || payload.callback_query?.from?.id?.toString();
+
+       if (userId !== c.env.TELEGRAM_ALLOWED_USER_ID) {
+         return new Response('Unauthorized', { status: 403 });
+       }
+
+       c.executionCtx.waitUntil(
+         c.env.BACKEND.fetch(new Request("http://backend/internal/bot-handler", {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify(payload),
+         }))
+       );
+       return new Response('OK', { status: 200 });
+     } catch (e) {
+       return new Response('Error', { status: 500 });
+     }
+   });
+
+   // Forward backend API calls explicitly destined for Telegram
+   app.post('/api/:method', async (c) => {
+     const method = c.req.param('method');
+     const tgUrl = `https://api.telegram.org/bot${c.env.TELEGRAM_BOT_TOKEN}/${method}`;
+     return fetch(new Request(tgUrl, c.req.raw));
+   });
+
+   // Proxy file downloads via CDN explicitly bypassing BOT URL limits
+   app.get('/file/:path{.*}', async (c) => {
+     const path = c.req.param('path');
+     const tgUrl = `https://api.telegram.org/file/bot${c.env.TELEGRAM_BOT_TOKEN}/${path}`;
+     return fetch(new Request(tgUrl, c.req.raw));
+   });
+
+   export default app;
+   ```
+4. Deploy the worker using `npx wrangler deploy`.
+5. Set `TELEGRAM_BOT_TOKEN` in the Cloudflare Dashboard correctly as a Secret for this new router!

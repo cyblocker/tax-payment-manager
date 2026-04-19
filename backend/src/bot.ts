@@ -49,7 +49,7 @@ export class TelegramBot {
     if (replyMarkup) {
       form.append('reply_markup', JSON.stringify(replyMarkup));
     }
-    
+
     const res = await fetch(url, { method: 'POST', body: form });
     const data: any = await res.json();
     if (!data.ok) console.error("SendPhoto Error:", data.description);
@@ -67,7 +67,7 @@ export class TelegramBot {
   async handleMessage(message: any) {
     const chatId = message.chat.id;
     const text = message.text || '';
-    
+
     if (text === '/start' || text.includes('/login')) {
       return this.sendText(chatId, "Welcome back! What would you like to do?", {
         inline_keyboard: [
@@ -91,11 +91,11 @@ export class TelegramBot {
         const billId = parseInt(match[1]);
         const dateStr = text.trim();
         await this.db.update(taxBills).set({ status: 'SCHEDULED', scheduledDate: dateStr }).where(eq(taxBills.id, billId));
-        
+
         await this.sendText(chatId, `✅ Payslip scheduled for ${dateStr}! Do you want to upload a proof/receipt photo?`, {
-           inline_keyboard: [
-              [{ text: "Yes, upload proof", callback_data: `bill_yes_receipt:${billId}` }, { text: "No, skip", callback_data: `bill_skip_receipt` }]
-           ]
+          inline_keyboard: [
+            [{ text: "Yes, upload proof", callback_data: `bill_yes_receipt:${billId}` }, { text: "No, skip", callback_data: `bill_skip_receipt` }]
+          ]
         });
         return;
       }
@@ -106,15 +106,15 @@ export class TelegramBot {
       if (match) {
         const billId = parseInt(match[1]);
         await this.sendText(chatId, "Uploading receipt... (Attachment Storage)");
-        
+
         // Find best photo or doc file_id
         let fileId = "";
         if (message.photo) fileId = message.photo[message.photo.length - 1].file_id;
         else fileId = message.document.file_id;
-        
+
         const fileRes: any = await this.callApi('getFile', { file_id: fileId });
         const filePath = fileRes.result.file_path;
-        
+
         const fileUrl = `https://api.telegram.org/file/bot${this.token}/${filePath}`;
         const downRes = await fetch(fileUrl);
         const arrayBuffer = await downRes.arrayBuffer();
@@ -123,9 +123,9 @@ export class TelegramBot {
         const uuid = crypto.randomUUID();
         const objectKey = `receipts/${uuid}.${ext}`;
         await this.bucket.put(objectKey, arrayBuffer);
-        
+
         await this.db.update(taxBills).set({ paymentScreenshot: `/assets/${objectKey}` }).where(eq(taxBills.id, billId));
-        
+
         await this.sendText(chatId, "✅ Receipt uploaded successfully!");
         return;
       }
@@ -140,10 +140,10 @@ export class TelegramBot {
     try {
       const photo = photos[photos.length - 1];
       const fileId = photo.file_id;
-      
+
       const fileRes: any = await this.callApi('getFile', { file_id: fileId });
       const filePath = fileRes.result.file_path;
-      
+
       const fileUrl = `https://api.telegram.org/file/bot${this.token}/${filePath}`;
       const downRes = await fetch(fileUrl);
       const arrayBuffer = await downRes.arrayBuffer();
@@ -151,9 +151,9 @@ export class TelegramBot {
       const uuid = crypto.randomUUID();
       const objectKey = `taxbills/${uuid}.jpg`;
       await this.bucket.put(objectKey, arrayBuffer, { httpMetadata: { contentType: 'image/jpeg' } });
-      
+
       const extractedData = await extractTaxBillInfo(arrayBuffer, 'image/jpeg', this.geminiKey);
-      
+
       if (!extractedData) {
         return this.sendText(chatId, "❌ Failed to read data via Gemini.");
       }
@@ -173,10 +173,10 @@ export class TelegramBot {
       });
 
       const msg = `✅ *Extracted Successfully!*\n\n` +
-                  `Tax: ${extractedData.tax_type}\n` +
-                  `Amount: ¥${extractedData.amount}\n` +
-                  `Due: ${extractedData.due_date}\n\nIt is now in your Dashboard!.`;
-                  
+        `Tax: ${extractedData.tax_type}\n` +
+        `Amount: ¥${extractedData.amount}\n` +
+        `Due: ${extractedData.due_date}\n\nIt is now in your Dashboard!.`;
+
       await this.sendText(chatId, msg);
 
     } catch (e) {
@@ -206,18 +206,18 @@ export class TelegramBot {
         await this.sendText(chatId, "You have no pending payslips.");
         return;
       }
-      
+
       // Sort closest due limits to the top
       q.sort((a: any, b: any) => {
-         const dA = a.dueDate ? new Date(a.dueDate).getTime() : 9999999999999;
-         const dB = b.dueDate ? new Date(b.dueDate).getTime() : 9999999999999;
-         return dA - dB;
+        const dA = a.dueDate ? new Date(a.dueDate).getTime() : 9999999999999;
+        const dB = b.dueDate ? new Date(b.dueDate).getTime() : 9999999999999;
+        return dA - dB;
       });
 
       const kb = q.map((b: any) => {
         let t_type = "单";
         if (b.taxType && b.taxType.trim().length > 0) t_type = b.taxType.trim()[0];
-        
+
         let t_year = "";
         const raw_year = b.taxYear || "";
         const first_c_match = raw_year.match(/^[^\d\s]/);
@@ -225,9 +225,9 @@ export class TelegramBot {
         if (first_c_match && digits_match) t_year = first_c_match[0] + digits_match[0];
         else if (digits_match) t_year = digits_match[0];
         else t_year = raw_year.substring(0, 2);
-        
+
         const title = `${t_type} ${t_year} ${b.payIndex || ""}`.replace(/\s+/g, ' ').trim();
-        
+
         let days_str = "?";
         if (b.dueDate) {
           const due = new Date(b.dueDate);
@@ -236,7 +236,7 @@ export class TelegramBot {
             days_str = String(diff);
           }
         }
-        
+
         return [{ text: `${title} (${days_str})`, callback_data: `bill_act:${b.id}` }];
       });
 
@@ -251,15 +251,15 @@ export class TelegramBot {
       if (!b) return this.sendText(chatId, "Bill not found.");
 
       const msg = `📋 *Bill Details*\n------------------\n` +
-                  `🔸 *Tax Type:* ${b.taxType || 'N/A'}\n` +
-                  `🔸 *Year:* ${b.taxYear || 'N/A'}\n` +
-                  `🔸 *Index:* ${b.payIndex || 'N/A'}\n` +
-                  `💰 *Amount:* ¥${(b.amount || 0).toLocaleString()}\n` +
-                  `📅 *Due Date:* ${b.dueDate || 'N/A'}\n` +
-                  `🏢 *Agency Code:* ${b.agencyCode || 'N/A'}\n` +
-                  `🔢 *Payment No:* ${b.paymentNumber || 'N/A'}\n` +
-                  `🔑 *Conf. No:* ${b.confirmationNumber || 'N/A'}\n`;
-                  
+        `🔸 *Tax Type:* ${b.taxType || 'N/A'}\n` +
+        `🔸 *Year:* ${b.taxYear || 'N/A'}\n` +
+        `🔸 *Index:* ${b.payIndex || 'N/A'}\n` +
+        `💰 *Amount:* ¥${(b.amount || 0).toLocaleString()}\n` +
+        `📅 *Due Date:* ${b.dueDate || 'N/A'}\n` +
+        `🏢 *Agency Code:* ${b.agencyCode || 'N/A'}\n` +
+        `🔢 *Payment No:* ${b.paymentNumber || 'N/A'}\n` +
+        `🔑 *Conf. No:* ${b.confirmationNumber || 'N/A'}\n`;
+
       const keyboard = {
         inline_keyboard: [
           [
@@ -268,21 +268,21 @@ export class TelegramBot {
           ]
         ]
       };
-      
+
       // Mirror legacy logic: retrieve image if exists instead of pure text
       if (b.originalImage) {
-         let key = '';
-         if (b.originalImage.startsWith("/assets/taxbills/")) key = b.originalImage.substring(17);
-         else if (b.originalImage.startsWith("/taxbills/")) key = b.originalImage.substring(10);
-         
-         if (key) {
-            const obj = await this.bucket.get(`taxbills/${key}`);
-            if (obj) {
-               const blob = await new Response(obj.body).blob();
-               await this.sendPhoto(chatId, blob, msg, keyboard);
-               return;
-            }
-         }
+        let key = '';
+        if (b.originalImage.startsWith("/assets/taxbills/")) key = b.originalImage.substring(17);
+        else if (b.originalImage.startsWith("/taxbills/")) key = b.originalImage.substring(10);
+
+        if (key) {
+          const obj = await this.bucket.get(`taxbills/${key}`);
+          if (obj) {
+            const blob = await new Response(obj.body).blob();
+            await this.sendPhoto(chatId, blob, msg, keyboard);
+            return;
+          }
+        }
       }
 
       await this.sendText(chatId, msg, keyboard);
@@ -292,11 +292,11 @@ export class TelegramBot {
     if (data.startsWith("bill_req_paid:")) {
       const id = parseInt(data.split(":")[1]);
       await this.db.update(taxBills).set({ status: 'PAID' }).where(eq(taxBills.id, id));
-      
+
       await this.sendText(chatId, `Payslip marked as PAID! Do you want to upload a receipt photo?`, {
-         inline_keyboard: [
-            [{ text: "Yes, upload proof", callback_data: `bill_yes_receipt:${id}` }, { text: "No, skip", callback_data: `bill_skip_receipt` }]
-         ]
+        inline_keyboard: [
+          [{ text: "Yes, upload proof", callback_data: `bill_yes_receipt:${id}` }, { text: "No, skip", callback_data: `bill_skip_receipt` }]
+        ]
       });
       return;
     }
@@ -310,20 +310,20 @@ export class TelegramBot {
       });
       return;
     }
-    
+
     if (data.startsWith("bill_yes_receipt:")) {
       const id = data.split(":")[1];
       await this.callApi('sendMessage', {
-         chat_id: chatId,
-         text: `Please upload the receipt photo for Bill ID: ${id}. I will listen for your reply!`,
-         reply_markup: { force_reply: true, input_field_placeholder: "Upload receipt..." }
+        chat_id: chatId,
+        text: `Please upload the receipt photo for Bill ID: ${id}. I will listen for your reply!`,
+        reply_markup: { force_reply: true, input_field_placeholder: "Upload receipt..." }
       });
       return;
     }
-    
+
     if (data === "bill_skip_receipt") {
-       await this.sendText(chatId, "Done. Skipped receipt logic.");
-       return;
+      await this.sendText(chatId, "Done. Skipped receipt logic.");
+      return;
     }
 
   }
