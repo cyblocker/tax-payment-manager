@@ -9,7 +9,7 @@ export type Env = {
   DB: D1Database;
   BUCKET: R2Bucket;
   GEMINI_API_KEY: string;
-  BOT: Fetcher;
+  BOT?: Fetcher;
 };
 
 const app = new Hono<{ Bindings: Env }>();
@@ -170,6 +170,10 @@ app.post('/internal/bot-handler', async (c) => {
   const body = await c.req.json();
   console.log("DEBUG: Received bot payload for user:", body.message?.from?.id || body.callback_query?.from?.id);
 
+  if (!c.env.BOT) {
+    return c.json({ status: 'ok', msg: 'Bot request skipped: No BOT binding found' });
+  }
+
   const bot = new TelegramBot(c.env.BOT, c.env.DB, c.env.BUCKET, c.env.GEMINI_API_KEY);
 
   c.executionCtx.waitUntil(
@@ -196,10 +200,12 @@ export default {
         
         if (diffDays === 7 || diffDays === 3 || diffDays === 1) {
           const msg = `⚠️ *Action Required: Upcoming Tax Deadline*\n\nTax: ${b.taxType || 'Unknown'}\nAmount: ¥${b.amount}\nDue in: ${diffDays} day(s)`;
-          await env.BOT.fetch(new Request("http://bot/api/notify-admin", {
-            method: 'POST',
-            body: JSON.stringify({ text: msg }),
-          }));
+          if (env.BOT) {
+            await env.BOT.fetch(new Request("http://bot/api/notify-admin", {
+              method: 'POST',
+              body: JSON.stringify({ text: msg }),
+            }));
+          }
         }
       }
       
@@ -209,18 +215,22 @@ export default {
         
         if (diffDays === 1) {
           const msg = `🔔 *Reminder: Scheduled Payment Tomorrow*\n\nTax: ${b.taxType || 'Unknown'}\nAmount: ¥${b.amount}`;
-          await env.BOT.fetch(new Request("http://bot/api/notify-admin", {
-            method: 'POST',
-            body: JSON.stringify({ text: msg }),
-          }));
+          if (env.BOT) {
+            await env.BOT.fetch(new Request("http://bot/api/notify-admin", {
+              method: 'POST',
+              body: JSON.stringify({ text: msg }),
+            }));
+          }
         } else if (diffDays < 0) {
           // Past the scheduled date
           await db.update(taxBills).set({ status: 'PAID' }).where(eq(taxBills.id, b.id));
           const msg = `✅ *Payment Marked as Paid*\n\nTax: ${b.taxType || 'Unknown'}\nThe scheduled date has passed and the bill was automatically moved to Paid status.`;
-          await env.BOT.fetch(new Request("http://bot/api/notify-admin", {
-            method: 'POST',
-            body: JSON.stringify({ text: msg }),
-          }));
+          if (env.BOT) {
+            await env.BOT.fetch(new Request("http://bot/api/notify-admin", {
+              method: 'POST',
+              body: JSON.stringify({ text: msg }),
+            }));
+          }
         }
       }
     }

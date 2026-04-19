@@ -98,3 +98,13 @@ To keep your secrets safe and your architecture strictly isolated, this reposito
    TELEGRAM_ALLOWED_USER_ID="your-telegram-user-id"
    ```
 4. Register your webhook via Telegram API pointing to the bot router's domain: `https://api.telegram.org/bot<YOUR_TOKEN>/setWebhook?url=https://<YOUR_BOT_WORKER_DOMAIN>/webhook`
+
+---
+
+## 🚫 Opting Out of Telegram
+If you only want the Web Dashboard and don't need Telegram notifications:
+1. **Frontend & Backend**: Deploy them as usual.
+2. **Backend Config**: In `backend/wrangler.toml`, delete the `[[services]]` block that binds to `BOT`.
+3. **Ignore Bot**: You do not need to deploy the `bot` workspace or set any Telegram secrets.
+
+The backend code is designed to detect the missing `BOT` binding and will gracefully skip all notification logic while still performing automated database updates (like marking scheduled bills as PAID).
