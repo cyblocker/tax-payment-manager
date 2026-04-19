@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "frontend",
-    "backend"
+    "backend",
+    "bot"
   ],
   "engines": {
     "node": ">=20.0.0"

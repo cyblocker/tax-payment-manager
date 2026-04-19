@@ -1,0 +1,25 @@
+name = "telegram-bot-router"
+compatibility_date = "2024-04-19"
+main = "src/index.ts"
+
+[vars]
+TELEGRAM_ALLOWED_USER_ID = "264771739"
+
+[[services]]
+binding = "BACKEND"
+service = "tax-payment-backend"
+
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = false
+persist = true
+head_sampling_rate = 1

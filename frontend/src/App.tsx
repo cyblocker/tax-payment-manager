@@ -143,9 +143,6 @@ function App() {
               TaxManager<span className="text-indigo-600">.</span>
             </h1>
           </div>
-          <div className="flex bg-gray-100 items-center justify-center px-4 py-2 rounded-full font-medium text-sm text-gray-600">
-            Admin View
-          </div>
         </div>
       </header>
 
