@@ -1,0 +1,11 @@
+{
+  "name": "tax-payment-manager",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

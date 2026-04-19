@@ -1,0 +1,18 @@
+name = "tax-payment-backend"
+compatibility_date = "2024-04-05"
+main = "src/index.ts"
+
+[vars]
+TELEGRAM_ALLOWED_USER_ID = "YOUR_TELEGRAM_USER_ID_HERE"
+GEMINI_API_KEY = ""
+TELEGRAM_BOT_TOKEN = ""
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tax-payment-manager-db"
+database_id = "your-database-id-here"
+migrations_dir = "drizzle"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "tax-payment-manager-bucket"
