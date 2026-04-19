@@ -1,3 +1,5 @@
+<img width="2816" height="1536" alt="Gemini_Generated_Image_d38prjd38prjd38p" src="https://github.com/user-attachments/assets/e788399c-fb95-43b8-8ee2-457968d6c3a3" />
+
 # Tax Payment Manager
 
 A blazing-fast, serverless application for automating the tracking and data-extraction of tax documents. Built entirely on the Cloudflare ecosystem (Pages + Workers + D1 + R2) and powered by the Google Gemini AI Model.
