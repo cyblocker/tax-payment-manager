@@ -4,25 +4,25 @@ import { taxBills } from './db/schema';
 import { extractTaxBillInfo } from './gemini';
 
 export class TelegramBot {
-  private token: string;
+  private bot: Fetcher;
   private db: any;
   private bucket: R2Bucket;
   private geminiKey: string;
 
-  constructor(token: string, d1: D1Database, bucket: R2Bucket, geminiKey: string) {
-    this.token = token;
+  constructor(botBinding: Fetcher, d1: D1Database, bucket: R2Bucket, geminiKey: string) {
+    this.bot = botBinding;
     this.db = drizzle(d1);
     this.bucket = bucket;
     this.geminiKey = geminiKey;
   }
 
   async callApi(method: string, payload: any) {
-    const url = `https://api.telegram.org/bot${this.token}/${method}`;
-    const res = await fetch(url, {
+    const url = `http://bot/api/${method}`;
+    const res = await this.bot.fetch(new Request(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-    });
+    }));
     const data: any = await res.json();
     if (!data.ok) {
       console.error(`TELEGRAM API ERROR (${method}):`, data.description);
@@ -40,7 +40,7 @@ export class TelegramBot {
   }
 
   async sendPhoto(chatId: number, photoBlob: Blob, caption: string, replyMarkup?: any) {
-    const url = `https://api.telegram.org/bot${this.token}/sendPhoto`;
+    const url = `http://bot/api/sendPhoto`;
     const form = new FormData();
     form.append('chat_id', chatId.toString());
     form.append('photo', new File([photoBlob], 'image.jpg', { type: 'image/jpeg' }));
@@ -50,7 +50,7 @@ export class TelegramBot {
       form.append('reply_markup', JSON.stringify(replyMarkup));
     }
 
-    const res = await fetch(url, { method: 'POST', body: form });
+    const res = await this.bot.fetch(new Request(url, { method: 'POST', body: form }));
     const data: any = await res.json();
     if (!data.ok) console.error("SendPhoto Error:", data.description);
     return data;
@@ -115,8 +115,8 @@ export class TelegramBot {
         const fileRes: any = await this.callApi('getFile', { file_id: fileId });
         const filePath = fileRes.result.file_path;
 
-        const fileUrl = `https://api.telegram.org/file/bot${this.token}/${filePath}`;
-        const downRes = await fetch(fileUrl);
+        const fileUrl = `http://bot/file/${filePath}`;
+        const downRes = await this.bot.fetch(new Request(fileUrl));
         const arrayBuffer = await downRes.arrayBuffer();
 
         const ext = message.document?.file_name ? message.document.file_name.split('.').pop() : 'jpg';
@@ -144,8 +144,8 @@ export class TelegramBot {
       const fileRes: any = await this.callApi('getFile', { file_id: fileId });
       const filePath = fileRes.result.file_path;
 
-      const fileUrl = `https://api.telegram.org/file/bot${this.token}/${filePath}`;
-      const downRes = await fetch(fileUrl);
+      const fileUrl = `http://bot/file/${filePath}`;
+      const downRes = await this.bot.fetch(new Request(fileUrl));
       const arrayBuffer = await downRes.arrayBuffer();
 
       const uuid = crypto.randomUUID();
