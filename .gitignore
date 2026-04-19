@@ -3,6 +3,8 @@
 **/.env
 **/.env.local
 **/secrets.json
+frontend/.env*
+frontend/.env.production
 
 # Exclude legacy python monolith logic to keep the repository un-cluttered
 _python_legacy/

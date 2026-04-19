@@ -39,6 +39,10 @@ You must supply the backend with its required secrets via the Cloudflare Dashboa
 - `TELEGRAM_BOT_TOKEN`: Your API token generated from @BotFather.
 - `TELEGRAM_ALLOWED_USER_ID`: The numeric Chat ID of the authorized admin user.
 
+### 4. Environment Variables configuration
+You must supply the frontend with its required secrets via the Cloudflare Dashboard (Workers & Pages -> Your Frontend -> Settings -> Environment Variables):
+- `VITE_API_BASE`: The URL of your backend API.
+
 ---
 
 ## Creating Your Own Telegram Assistant
