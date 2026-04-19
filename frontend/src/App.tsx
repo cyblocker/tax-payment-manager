@@ -13,7 +13,8 @@ function App() {
   const [activeTab, setActiveTab] = useState<'PENDING' | 'ARCHIVED'>('PENDING');
   const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
 
-  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
+  // All API calls natively map to relative routes so the Cloudflare Edge Proxy handles them transparently via BACKEND bindings.
+  const API_BASE = '';
 
   const fetchBills = async () => {
     setIsLoadingBills(true);

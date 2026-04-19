@@ -8,7 +8,6 @@ import { extractTaxBillInfo } from './gemini';
 export type Env = {
   DB: D1Database;
   BUCKET: R2Bucket;
-  TELEGRAM_ALLOWED_USER_ID: string;
   TELEGRAM_BOT_TOKEN: string;
   GEMINI_API_KEY: string;
 };
