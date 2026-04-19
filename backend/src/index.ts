@@ -8,8 +8,8 @@ import { extractTaxBillInfo } from './gemini';
 export type Env = {
   DB: D1Database;
   BUCKET: R2Bucket;
-  TELEGRAM_BOT_TOKEN: string;
   GEMINI_API_KEY: string;
+  BOT: Fetcher;
 };
 
 const app = new Hono<{ Bindings: Env }>();
@@ -176,7 +176,7 @@ app.post('/internal/bot-handler', async (c) => {
   const body = await c.req.json();
   console.log("DEBUG: Received bot payload for user:", body.message?.from?.id || body.callback_query?.from?.id);
 
-  const bot = new TelegramBot(c.env.TELEGRAM_BOT_TOKEN, c.env.DB, c.env.BUCKET, c.env.GEMINI_API_KEY);
+  const bot = new TelegramBot(c.env.BOT, c.env.DB, c.env.BUCKET, c.env.GEMINI_API_KEY);
 
   // Lazy Update: Shift past Scheduled items to Paid via Bot Trigger
   const today = new Date().toISOString().split('T')[0];

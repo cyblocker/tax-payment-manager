@@ -5,7 +5,10 @@ workers_dev = false
 
 [vars]
 GEMINI_API_KEY = ""
-TELEGRAM_BOT_TOKEN = ""
+
+[[services]]
+binding = "BOT"
+service = "telegram-bot-router"
 
 [[d1_databases]]
 binding = "DB"
