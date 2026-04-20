@@ -222,7 +222,15 @@ function App() {
           ) : (() => {
             const filteredBills = bills.filter(b =>
               activeTab === 'PENDING' ? (b.status === 'PENDING' || !b.status) : (b.status === 'SCHEDULED' || b.status === 'PAID')
-            );
+            ).sort((a, b) => {
+              // Bills without a due date go to the end
+              if (!a.dueDate && !b.dueDate) return 0;
+              if (!a.dueDate) return 1;
+              if (!b.dueDate) return -1;
+              // PENDING: earliest due date first (ascending); ARCHIVED: most recent first (descending)
+              const cmp = a.dueDate.localeCompare(b.dueDate);
+              return activeTab === 'PENDING' ? cmp : -cmp;
+            });
 
             if (filteredBills.length === 0) {
               return (
