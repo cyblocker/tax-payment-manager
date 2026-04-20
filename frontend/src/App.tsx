@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PdfUploader } from './components/PdfUploader';
-import { Receipt, Loader2, FileText, CalendarDays, Wallet, X, Upload, Maximize } from 'lucide-react';
+import { Receipt, Loader2, FileText, CalendarDays, Wallet, X, Upload, Maximize, Trash2 } from 'lucide-react';
 
 function App() {
   const [bills, setBills] = useState<any[]>([]);
@@ -12,6 +12,7 @@ function App() {
   const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
   const [activeTab, setActiveTab] = useState<'PENDING' | 'ARCHIVED'>('PENDING');
   const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // All API calls natively map to relative routes so the Cloudflare Edge Proxy handles them transparently via BACKEND bindings.
   const API_BASE = '';
@@ -100,6 +101,32 @@ function App() {
       alert("Error saving: " + err);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedBill) return;
+    const billLabel = `${selectedBill.taxType || 'Unknown'} - ¥${(selectedBill.amount || 0).toLocaleString()}`;
+    if (!confirm(`Are you sure you want to permanently delete this record?\n\n${billLabel}\n\nThis will also remove the payslip image and any uploaded receipt. This action cannot be undone.`)) {
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/taxbills/${selectedBill.id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        closeEditor();
+        await fetchBills();
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        alert(`Failed to delete: ${errData.error || res.statusText}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error deleting record: ' + err);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -379,7 +406,16 @@ function App() {
               </div>
             </div>
 
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center gap-3">
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="px-4 py-2.5 text-red-600 font-medium hover:bg-red-50 rounded-xl transition-colors flex items-center gap-2 disabled:opacity-70 mr-auto"
+                title="Permanently delete this record"
+              >
+                {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                Delete
+              </button>
               <button onClick={closeEditor} className="px-5 py-2.5 text-gray-600 font-medium hover:bg-gray-200 rounded-xl transition-colors">
                 Cancel
               </button>

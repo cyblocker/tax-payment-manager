@@ -151,13 +151,35 @@ app.post('/api/taxbills/:id/receipt', async (c) => {
   }
 });
 
-// DELETE /api/taxbills/:id
+// DELETE /api/taxbills/:id -> Delete bill record and associated R2 images
 app.delete('/api/taxbills/:id', async (c) => {
   const idStr = c.req.param('id');
   const id = parseInt(idStr, 10);
   if (isNaN(id)) return c.json({ error: 'Invalid ID' }, 400);
 
   const db = drizzle(c.env.DB);
+
+  // Fetch the record first so we can clean up R2 objects
+  const [bill] = await db.select().from(taxBills).where(eq(taxBills.id, id)).limit(1);
+  if (!bill) return c.json({ error: 'Not found' }, 404);
+
+  // Helper: extract R2 key from stored path (e.g. "/assets/taxbills/xxx.png" -> "taxbills/xxx.png")
+  const extractR2Key = (path: string | null): string | null => {
+    if (!path) return null;
+    // Handle both "/assets/taxbills/..." and "/taxbills/..." formats
+    const match = path.match(/\/?(?:assets\/)?((?:taxbills|receipts)\/.+)/);
+    return match ? match[1] : null;
+  };
+
+  // Delete R2 objects (fire-and-forget, don't fail the whole request)
+  const keysToDelete = [
+    extractR2Key(bill.originalImage),
+    extractR2Key(bill.paymentScreenshot),
+  ].filter(Boolean) as string[];
+
+  await Promise.allSettled(keysToDelete.map(key => c.env.BUCKET.delete(key)));
+
+  // Delete the DB record
   await db.delete(taxBills).where(eq(taxBills.id, id));
 
   return c.json({ success: true });
