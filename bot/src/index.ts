@@ -35,7 +35,7 @@ app.post('/webhook', async (c) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         })).then(r => r.text()).then(t => console.log(`[BOT] Backend responded: ${t}`))
-           .catch(err => console.error("[BOT] Error forwarding payload: ", err))
+          .catch(err => console.error("[BOT] Error forwarding payload: ", err))
       );
     }
 
@@ -52,17 +52,17 @@ app.post('/api/:method', async (c) => {
   const method = c.req.param('method');
   const tgUrl = `https://api.telegram.org/bot${c.env.TELEGRAM_BOT_TOKEN}/${method}`;
   console.log(`[BOT] Proxying API call: ${method}`);
-  
+
   const body = await c.req.arrayBuffer();
   const headers = new Headers(c.req.raw.headers);
   headers.delete('host'); // Critical: Remove internal host header
-  
+
   const res = await fetch(tgUrl, {
     method: 'POST',
     headers: headers,
     body: body
   });
-  
+
   const resText = await res.clone().text();
   console.log(`[BOT] Telegram response for ${method}: ${resText.substring(0, 100)}...`);
   return res;
@@ -72,7 +72,7 @@ app.post('/api/:method', async (c) => {
 app.get('/file/:path{.*}', async (c) => {
   const path = c.req.param('path');
   const tgUrl = `https://api.telegram.org/file/bot${c.env.TELEGRAM_BOT_TOKEN}/${path}`;
-  
+
   return fetch(new Request(tgUrl, c.req.raw));
 });
 
@@ -81,7 +81,7 @@ app.post('/api/notify-admin', async (c) => {
   try {
     const { text } = await c.req.json();
     const tgUrl = `https://api.telegram.org/bot${c.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
-    
+
     return fetch(new Request(tgUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
