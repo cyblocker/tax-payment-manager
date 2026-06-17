@@ -144,8 +144,23 @@ app.put('/api/taxbills/:id', async (c) => {
   const body = await c.req.json();
   const db = drizzle(c.env.DB);
 
+  const updateData = {
+    taxType: body.taxType,
+    taxYear: body.taxYear,
+    payIndex: body.payIndex,
+    amount: body.amount,
+    agencyCode: body.agencyCode,
+    paymentNumber: body.paymentNumber,
+    confirmationNumber: body.confirmationNumber,
+    paymentCategory: body.paymentCategory,
+    dueDate: body.dueDate,
+    status: body.status,
+    scheduledDate: body.scheduledDate,
+    paymentScreenshot: body.paymentScreenshot
+  };
+
   const [updated] = await db.update(taxBills)
-    .set({ ...body })
+    .set(updateData)
     .where(eq(taxBills.id, id))
     .returning();
 
