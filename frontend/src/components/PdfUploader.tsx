@@ -253,8 +253,8 @@ function PdfCanvasViewer({ pdfPage, rotation, onRender }: { pdfPage: pdfjsLib.PD
       const context = canvas.getContext('2d');
       if (!context) return;
 
-      // High DPI scaling (Scale 2.0 for clear extraction and viewing)
-      const viewport = pdfPage.getViewport({ scale: 2.0, rotation: rotation });
+      // High DPI scaling (Scale 4.0 for clear extraction and viewing)
+      const viewport = pdfPage.getViewport({ scale: 4.0, rotation: rotation });
       
       canvas.width = viewport.width;
       canvas.height = viewport.height;
