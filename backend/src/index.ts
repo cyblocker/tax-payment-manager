@@ -95,12 +95,42 @@ app.post('/api/upload', async (c) => {
       confirmationNumber: extractedData.confirmation_number,
       paymentCategory: extractedData.payment_category,
       dueDate: extractedData.due_date,
-      status: 'PENDING'
+      status: 'PENDING',
+      createdAt: new Date()
     }).returning();
 
     return c.json(inserted);
   } catch (error: any) {
     console.error('Upload Error:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// POST /api/taxbills -> Manually create a new tax bill without an image
+app.post('/api/taxbills', async (c) => {
+  try {
+    const body = await c.req.json();
+    const db = drizzle(c.env.DB);
+
+    const [inserted] = await db.insert(taxBills).values({
+      taxType: body.taxType || '',
+      taxYear: body.taxYear || '',
+      payIndex: body.payIndex || '',
+      amount: body.amount || 0,
+      agencyCode: body.agencyCode || '',
+      paymentNumber: body.paymentNumber || '',
+      confirmationNumber: body.confirmationNumber || '',
+      paymentCategory: body.paymentCategory || '',
+      dueDate: body.dueDate || null,
+      status: body.status || 'PENDING',
+      scheduledDate: body.scheduledDate || null,
+      originalImage: null,
+      createdAt: new Date()
+    }).returning();
+
+    return c.json(inserted);
+  } catch (error: any) {
+    console.error('Manual Create Error:', error);
     return c.json({ error: error.message }, 500);
   }
 });

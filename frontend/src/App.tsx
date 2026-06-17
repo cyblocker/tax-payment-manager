@@ -85,8 +85,12 @@ function App() {
   const handleEditorSave = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch(`${API_BASE}/api/taxbills/${selectedBill.id}`, {
-        method: 'PUT',
+      const isNew = !selectedBill.id;
+      const url = isNew ? `${API_BASE}/api/taxbills` : `${API_BASE}/api/taxbills/${selectedBill.id}`;
+      const method = isNew ? 'POST' : 'PUT';
+
+      const res = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editForm),
       });
@@ -194,9 +198,17 @@ function App() {
         <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 relative">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-2xl font-bold text-gray-800">Recent Bills Dashboard</h3>
-            <button onClick={fetchBills} className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
-              Refresh
-            </button>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => openEditor({ status: 'PENDING' })} 
+                className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-full transition-colors"
+              >
+                + Add Manually
+              </button>
+              <button onClick={fetchBills} className="text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors">
+                Refresh
+              </button>
+            </div>
           </div>
 
           {/* Tab Navigation */}
@@ -302,7 +314,9 @@ function App() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <h3 className="text-xl font-bold text-gray-800">Edit Details</h3>
+              <h3 className="text-xl font-bold text-gray-800">
+                {selectedBill.id ? 'Edit Details' : 'Add New Bill'}
+              </h3>
               <button onClick={closeEditor} className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
                 <X className="w-5 h-5" />
               </button>
@@ -330,35 +344,37 @@ function App() {
                 </div>
 
                 {/* Receipt Upload/Display Box */}
-                <div className="mt-4 p-4 border-2 border-dashed border-gray-200 rounded-2xl">
-                  <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2"><Receipt className="w-4 h-4" /> Proof of Payment</h4>
-                  {editForm.paymentScreenshot ? (
-                    <div className="relative group rounded-xl overflow-hidden h-32 flex">
-                      <img src={`${API_BASE}${editForm.paymentScreenshot}`} className="w-full h-full object-cover opacity-90" alt="Receipt" />
-                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-6 text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => setEnlargedImage(`${API_BASE}${editForm.paymentScreenshot}`)}
-                          className="flex flex-col items-center hover:text-indigo-300 transition-colors"
-                        >
-                          <Maximize className="w-5 h-5 mb-1" />
-                          <span className="text-xs font-medium">Enlarge</span>
-                        </button>
-
-                        <label className="flex flex-col items-center hover:text-indigo-300 transition-colors cursor-pointer">
-                          <Upload className="w-5 h-5 mb-1" />
-                          <span className="text-xs font-medium">Replace</span>
-                          <input type="file" className="hidden" accept="image/*" onChange={handleReceiptUpload} disabled={isUploadingReceipt} />
-                        </label>
+                {selectedBill.id && (
+                  <div className="mt-4 p-4 border-2 border-dashed border-gray-200 rounded-2xl">
+                    <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2"><Receipt className="w-4 h-4" /> Proof of Payment</h4>
+                    {editForm.paymentScreenshot ? (
+                      <div className="relative group rounded-xl overflow-hidden h-32 flex">
+                        <img src={`${API_BASE}${editForm.paymentScreenshot}`} className="w-full h-full object-cover opacity-90" alt="Receipt" />
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-6 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => setEnlargedImage(`${API_BASE}${editForm.paymentScreenshot}`)}
+                            className="flex flex-col items-center hover:text-indigo-300 transition-colors"
+                          >
+                            <Maximize className="w-5 h-5 mb-1" />
+                            <span className="text-xs font-medium">Enlarge</span>
+                          </button>
+    
+                          <label className="flex flex-col items-center hover:text-indigo-300 transition-colors cursor-pointer">
+                            <Upload className="w-5 h-5 mb-1" />
+                            <span className="text-xs font-medium">Replace</span>
+                            <input type="file" className="hidden" accept="image/*" onChange={handleReceiptUpload} disabled={isUploadingReceipt} />
+                          </label>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <label className="flex flex-col items-center justify-center h-32 bg-slate-50 hover:bg-slate-100 cursor-pointer rounded-xl transition-colors">
-                      {isUploadingReceipt ? <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" /> : <Upload className="w-6 h-6 text-indigo-400 mb-2" />}
-                      <span className="text-sm font-medium text-indigo-600">Upload Receipt</span>
-                      <input type="file" className="hidden" accept="image/*" onChange={handleReceiptUpload} disabled={isUploadingReceipt} />
-                    </label>
-                  )}
-                </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center h-32 bg-slate-50 hover:bg-slate-100 cursor-pointer rounded-xl transition-colors">
+                        {isUploadingReceipt ? <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" /> : <Upload className="w-6 h-6 text-indigo-400 mb-2" />}
+                        <span className="text-sm font-medium text-indigo-600">Upload Receipt</span>
+                        <input type="file" className="hidden" accept="image/*" onChange={handleReceiptUpload} disabled={isUploadingReceipt} />
+                      </label>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Editor Form Side */}
@@ -415,16 +431,18 @@ function App() {
             </div>
 
             <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center gap-3">
-              <button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="px-4 py-2.5 text-red-600 font-medium hover:bg-red-50 rounded-xl transition-colors flex items-center gap-2 disabled:opacity-70 mr-auto"
-                title="Permanently delete this record"
-              >
-                {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                Delete
-              </button>
-              <button onClick={closeEditor} className="px-5 py-2.5 text-gray-600 font-medium hover:bg-gray-200 rounded-xl transition-colors">
+              {selectedBill.id && (
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="px-4 py-2.5 text-red-600 font-medium hover:bg-red-50 rounded-xl transition-colors flex items-center gap-2 disabled:opacity-70 mr-auto"
+                  title="Permanently delete this record"
+                >
+                  {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  Delete
+                </button>
+              )}
+              <button onClick={closeEditor} className="px-5 py-2.5 text-gray-600 font-medium hover:bg-gray-200 rounded-xl transition-colors bg-white hover:bg-gray-100 border border-gray-200">
                 Cancel
               </button>
               <button onClick={handleEditorSave} disabled={isSaving} className="px-6 py-2.5 bg-indigo-600 text-white font-medium hover:bg-indigo-700 rounded-xl transition-colors shadow-md shadow-indigo-200 disabled:opacity-70 flex items-center gap-2">
