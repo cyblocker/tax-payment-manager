@@ -69,7 +69,7 @@ export async function extractTaxBillInfo(imageBuffer: ArrayBuffer, mimeType: str
 
   const executeExtraction = async (promptText: string, temp: number = 0.1) => {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-lite-preview',
+      model: 'gemini-3.5-flash',
       contents: [
         {
           role: 'user', parts: [
@@ -104,10 +104,10 @@ export async function extractTaxBillInfo(imageBuffer: ArrayBuffer, mimeType: str
   try {
     console.log("[GEMINI] Starting primary extraction attempt...");
     let result = await executeExtraction(primaryPrompt, 0.1);
-    
+
     // Check if the extracted data is complete (specifically checking amount, due_date, and pay_index)
     const isComplete = result && result.amount && result.due_date && result.pay_index;
-    
+
     if (!isComplete) {
       console.log("[GEMINI] Primary extraction incomplete (missing amount, due_date, or pay_index). Retrying with enhanced prompt...");
       try {
@@ -116,7 +116,7 @@ export async function extractTaxBillInfo(imageBuffer: ArrayBuffer, mimeType: str
           // Compare how many of the target fields (amount, due_date, pay_index) were successfully extracted
           const primaryScore = (result?.amount ? 1 : 0) + (result?.due_date ? 1 : 0) + (result?.pay_index ? 1 : 0);
           const retryScore = (retryResult.amount ? 1 : 0) + (retryResult.due_date ? 1 : 0) + (retryResult.pay_index ? 1 : 0);
-          
+
           if (retryScore > primaryScore || (retryResult.amount && retryResult.due_date && retryResult.pay_index)) {
             console.log(`[GEMINI] Retry successful. Score increased from ${primaryScore} to ${retryScore}. Using retry results.`);
             result = retryResult;
@@ -131,7 +131,7 @@ export async function extractTaxBillInfo(imageBuffer: ArrayBuffer, mimeType: str
     } else {
       console.log("[GEMINI] Primary extraction successful and complete.");
     }
-    
+
     return result;
   } catch (error) {
     console.error('Gemini Extraction Error:', error);
